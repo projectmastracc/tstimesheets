@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trades Timesheet & Admin Verification Portal</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --warning: #ca8a04;
+            --danger: #dc2626;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: var(--gray-800);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .view-toggle button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 1px solid var(--gray-200);
+            background: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .view-toggle button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: var(--gray-700);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--gray-200);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .day-box {
+            background: var(--gray-100);
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .day-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        button.btn {
+            background: var(--success);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button.btn:hover {
+            opacity: 0.9;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 14px;
+        }
+
+        th {
+            background-color: var(--gray-100);
+            font-weight: 600;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .badge-missing { background: #fee2e2; color: var(--danger); }
+        .badge-review { background: #fef9c3; color: var(--warning); }
+        .badge-approved { background: #dcfce7; color: var(--success); }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .btn-tick { background: var(--primary); color: white; }
+        .btn-approve { background: var(--success); color: white; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>Trades Timesheet Portal</h1>
+            <p style="color: #64748b; font-size: 14px;">Zero-cost local browser tracking prototype</p>
+        </div>
+        <div class="view-toggle">
+            <button id="btn-eng-view" class="active" onclick="switchView('engineer')">👷 Engineer Entry</button>
+            <button id="btn-admin-view" onclick="switchView('admin')">💼 Admin Dashboard</button>
+        </div>
+    </header>
+
+    <!-- ENGINEER VIEW -->
+    <div id="engineer-view" class="card">
+        <h2>Submit Weekly Hours</h2>
+        <form id="timesheet-form" onsubmit="handleFormSubmit(event)">
+            <div class="form-group">
+                <label for="eng-name">Your Name</label>
+                <select id="eng-name" required>
+                    <option value="">-- Select Your Name --</option>
+                    <option value="John Doe">John Doe</option>
+                    <option value="Jane Smith">Jane Smith</option>
+                    <option value="Dave Wright">Dave Wright</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="week-date">Week Commencing (Monday Date)</label>
+                <input type="date" id="week-date" required>
+            </div>
+
+            <div class="days-grid">
+                <!-- Mon -->
+                <div class="day-box">
+                    <label>Monday</label>
+                    <div class="day-row">
+                        <input type="number" step="0.5" placeholder="Hours" id="mon-hours" required min="0" max="24">
+                        <select id="mon-job" required>
+                            <option value="NCC Servicing">NCC Servicing</option>
+                            <option value="BOLSOVER">BOLSOVER</option>
+                            <option value="Private Work">Private Work</option>
+                        </select>
+                    </div>
+                    <input type="text" placeholder="Short description..." id="mon-desc" style="margin-top:8px;" required>
+                </div>
+                <!-- Tue -->
+                <div class="day-box">
+                    <label>Tuesday</label>
+                    <div class="day-row">
+                        <input type="number" step="0.5" placeholder="Hours" id="tue-hours" required min="0" max="24">
+                        <select id="tue-job" required>
+                            <option value="NCC Servicing">NCC Servicing</option>
+                            <option value="BOLSOVER">BOLSOVER</option>
+                            <option value="Private Work">Private Work</option>
+                        </select>
+                    </div>
+                    <input type="text" placeholder="Short description..." id="tue-desc" style="margin-top:8px;" required>
+                </div>
+                <!-- Wed -->
+                <div class="day-box">
+                    <label>Wednesday</label>
+                    <div class="day-row">
+                        <input type="number" step="0.5" placeholder="Hours" id="wed-hours" required min="0" max="24">
+                        <select id="wed-job" required>
+                            <option value="NCC Servicing">NCC Servicing</option>
+                            <option value="BOLSOVER">BOLSOVER</option>
+                            <option value="Private Work">Private Work</option>
+                        </select>
+                    </div>
+                    <input type="text" placeholder="Short description..." id="wed-desc" style="margin-top:8px;" required>
+                </div>
+                <!-- Thu -->
+                <div class="day-box">
+                    <label>Thursday</label>
+                    <div class="day-row">
+                        <input type="number" step="0.5" placeholder="Hours" id="thu-hours" required min="0" max="24">
+                        <select id="thu-job" required>
+                            <option value="NCC Servicing">NCC Servicing</option>
+                            <option value="BOLSOVER">BOLSOVER</option>
+                            <option value="Private Work">Private Work</option>
+                        </select>
+                    </div>
+                    <input type="text" placeholder="Short description..." id="thu-desc" style="margin-top:8px;" required>
+                </div>
+                <!-- Fri -->
+                <div class="day-box">
+                    <label>Friday</label>
+                    <div class="day-row">
+                        <input type="number" step="0.5" placeholder="Hours" id="fri-hours" required min="0" max="24">
+                        <select id="fri-job" required>
+                            <option value="NCC Servicing">NCC Servicing</option>
+                            <option value="BOLSOVER">BOLSOVER</option>
+                            <option value="Private Work">Private Work</option>
+                        </select>
+                    </div>
+                    <input type="text" placeholder="Short description..." id="fri-desc" style="margin-top:8px;" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn">Submit Timesheet</button>
+        </form>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="admin-view" class="card hidden">
+        <h2>Master Control Dashboard & Verification Grid</h2>
+        <div style="margin-bottom: 20px;">
+            <button class="action-btn btn-tick" style="background:#4b5563;" onclick="exportCSV()">📥 Export Dashboard data to Excel CSV</button>
+            <button class="action-btn btn-tick" style="background:#9d174d;" onclick="clearStorage()">⚠️ Reset Database</button>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Submission ID</th>
+                        <th>Engineer</th>
+                        <th>Week Commencing</th>
+                        <th>Mon Hours / Job</th>
+                        <th>Tue Hours / Job</th>
+                        <th>Wed Hours / Job</th>
+                        <th>Thu Hours / Job</th>
+                        <th>Fri Hours / Job</th>
+                        <th>Admin Check (You)</th>
+                        <th>Manager Audit (BACS)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="dashboard-rows">
+                    <!-- Dynamic Rows Insertion -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initial Mock database inside LocalStorage to showcase functionality immediately
+    const defaultData = [
+        { id: 101, name: "John Doe", week: "2026-08-03", mon: "8 (NCC Servicing - Checked)", tue: "8 (BOLSOVER)", wed: "8 (Private Work)", thu: "8 (NCC Servicing)", fri: "7.5 (BOLSOVER)", status: "Admin Verified 🟩", manager: "Pending Approval 🟨" },
+        { id: 102, name: "Jane Smith", week: "2026-08-03", mon: "8.5 (BOLSOVER)", tue: "8.5 (BOLSOVER)", wed: "8 (NCC Servicing)", thu: "8 (NCC Servicing)", fri: "8 (Private Work)", status: "Admin Verified 🟩", manager: "BACS Finalised 🟩" }
+    ];
+
+    if (!localStorage.getItem("timesheets")) {
+        localStorage.setItem("timesheets", JSON.stringify(defaultData));
+    }
+
+    function switchView(view) {
+        if(view === 'engineer') {
+            document.getElementById('engineer-view').classList.remove('hidden');
+            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById('btn-eng-view').classList.add('active');
+            document.getElementById('btn-admin-view').classList.remove('active');
+        } else {
+            document.getElementById('engineer-view').classList.add('hidden');
+            document.getElementById('admin-view').classList.remove('hidden');
+            document.getElementById('btn-eng-view').classList.remove('active');
+            document.getElementById('btn-admin-view').classList.add('active');
+            renderAdminDashboard();
+        }
+    }
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        const submissions = JSON.parse(localStorage.getItem("timesheets")) || [];
+        
+        const newSheet = {
+            id: Date.now(),
+            name: document.getElementById('eng-name').value,
+            week: document.getElementById('week-date').value,
+            mon: `${document.getElementById('mon-hours').value} (${document.getElementById('mon-job').value} - ${document.getElementById('mon-desc').value})`,
+            tue: `${document.getElementById('tue-hours').value} (${document.getElementById('tue-job').value} - ${document.getElementById('tue-desc').value})`,
+            wed: `${document.getElementById('wed-hours').value} (${document.getElementById('wed-job').value} - ${document.getElementById('wed-desc').value})`,
+            thu: `${document.getElementById('thu-hours').value} (${document.getElementById('thu-job').value} - ${document.getElementById('thu-desc').value})`,
+            fri: `${document.getElementById('fri-hours').value} (${document.getElementById('fri-job').value} - ${document.getElementById('fri-desc').value})`,
+            status: "Awaiting Review 🟥",
+            manager: "Pending Approval 🟨"
+        };
+
+        submissions.push(newSheet);
+        localStorage.setItem("timesheets", JSON.stringify(submissions));
+        alert("Timesheet submitted successfully to Admin tracking dashboard!");
+        document.getElementById('timesheet-form').reset();
+    }
+
+    function renderAdminDashboard() {
+        const data = JSON.parse(localStorage.getItem("timesheets")) || [];
+        const tbody = document.getElementById('dashboard-rows');
+        tbody.innerHTML = "";
+
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>#${item.id.toString().slice(-4)}</td>
+                <td><strong>${item.name}</strong></td>
+                <td>${item.week}</td>
+                <td>${item.mon}</td>
+                <td>${item.tue}</td>
+                <td>${item.wed}</td>
+                <td>${item.thu}</td>
+                <td>${item.fri}</td>
+                <td><span class="badge ${item.status.includes('Verified') ? 'badge-approved' : 'badge-missing'}">${item.status}</span></td>
+                <td><span class="badge ${item.manager.includes('Finalised') ? 'badge-approved' : 'badge-review'}">${item.manager}</span></td>
+                <td>
+                    <button class="action-btn btn-tick" onclick="updateStatus(${item.id}, 'admin')">✔️ Tick Off</button>
+                    <button class="action-btn btn-approve" onclick="updateStatus(${item.id}, 'manager')">💰 BACS Appr</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function updateStatus(id, role) {
+        let data = JSON.parse(localStorage.getItem("timesheets"));
+        data = data.map(item => {
+            if(item.id === id) {
+                if(role === 'admin') item.status = "Admin Verified 🟩";
+                if(role === 'manager') item.manager = "BACS Finalised 🟩";
+            }
+            return item;
+        });
+        localStorage.setItem("timesheets", JSON.stringify(data));
+        renderAdminDashboard();
+    }
+
+    function exportCSV() {
+        const data = JSON.parse(localStorage.getItem("timesheets")) || [];
+        let csvContent = "data:text/csv;charset=utf-8,ID,Name,Week Commencing,Mon,Tue,Wed,Thu,Fri,Admin Status,Manager Status\n";
+        
+        data.forEach(r => {
+            csvContent += `"${r.id}","${r.name}","${r.week}","${r.mon}","${r.tue}","${r.wed}","${r.thu}","${r.fri}","${r.status}","${r.manager}"\n`;
+        });
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "timesheets_export.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function clearStorage() {
+        if(confirm("Are you sure you want to clear current dashboard data?")) {
+            localStorage.clear();
+            localStorage.setItem("timesheets", JSON.stringify([]));
+            renderAdminDashboard();
+        }
+    }
+</script>
+
+</body>
+</html>
