@@ -303,19 +303,19 @@
 
 <div class="container">
     <header>
-        <h1>💼 Admin Dashboard & Verification Grid</h1>
-        <p class="subtitle">Track, verify, and approve engineer timesheets</p>
+        <h1>� Admin Dashboard & Verification Grid</h1>
+        <p class="subtitle">Track, verify, and approve engineer timesheets (Admin access only)</p>
     </header>
 
     <div id="alert-container"></div>
 
     <div class="card">
         <div class="token-section" id="token-setup">
-            <p><strong>⚠️ GitHub Token Required</strong></p>
-            <p>This dashboard reads timesheet submissions from GitHub Issues. You need a Fine-Grained Personal Access Token with "Issues: Read & Write" permissions.</p>
+            <p><strong>🔒 Admin Token Required (Admins & Managers Only)</strong></p>
+            <p>This dashboard is for admins and managers only. Provide your personal Fine-Grained Personal Access Token with "Issues: Read & Write" permissions to view and manage all timesheet submissions.</p>
             <div class="token-input-group">
-                <input type="password" id="github-token" placeholder="Paste your GitHub PAT here (or it will load from env)" />
-                <button type="button" onclick="saveToken()">💾 Save Token</button>
+                <input type="password" id="github-token" placeholder="Paste your personal GitHub PAT (admin access)" />
+                <button type="button" onclick="saveToken()">💾 Unlock Admin Panel</button>
             </div>
             <p style="font-size: 12px; margin-top: 8px; color: #7c2d12;">Token is stored in browser's sessionStorage only (cleared when browser closes) for security.</p>
         </div>

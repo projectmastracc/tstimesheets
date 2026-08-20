@@ -254,16 +254,6 @@
     <div id="alert-container"></div>
 
     <div class="card">
-        <div class="token-section" id="token-setup">
-            <p><strong>⚠️ GitHub Token Required</strong></p>
-            <p>This form submits your timesheet to GitHub Issues. You need to provide a Fine-Grained Personal Access Token with "Issues: Read & Write" permissions.</p>
-            <div class="token-input-group">
-                <input type="password" id="github-token" placeholder="Paste your GitHub PAT here (or it will load from env)" />
-                <button type="button" onclick="saveToken()">💾 Save Token</button>
-            </div>
-            <p style="font-size: 12px; margin-top: 8px; color: #7c2d12;">Token is stored in browser's sessionStorage only (cleared when browser closes) for security.</p>
-        </div>
-
         <h2>Submit Weekly Hours</h2>
         <form id="timesheet-form" onsubmit="handleFormSubmit(event)">
             <div class="form-group">
@@ -359,14 +349,11 @@
     const GITHUB_REPO = 'tstimesheets';
     const GITHUB_API = 'https://api.github.com';
     
-    // Load token from sessionStorage on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedToken = sessionStorage.getItem('github_token');
-        if (savedToken) {
-            document.getElementById('github-token').value = savedToken;
-            showAlert('✅ GitHub token loaded from session storage', 'success');
-        }
-    });
+    // SUBMISSION TOKEN: This token is intentionally embedded in the public HTML.
+    // It's configured with MINIMAL permissions: Issues Write only, for this repo only.
+    // Engineers cannot use it to read timesheets or modify anything else.
+    // Replace this with your actual submission token (see README.md for setup).
+    const SUBMISSION_TOKEN = 'github_pat_'; // TODO: Add your submission token here
 
     function showAlert(message, type = 'info') {
         const container = document.getElementById('alert-container');
@@ -380,28 +367,8 @@
         }, 5000);
     }
 
-    function saveToken() {
-        const token = document.getElementById('github-token').value.trim();
-        if (!token) {
-            showAlert('❌ Please enter a GitHub token', 'error');
-            return;
-        }
-        sessionStorage.setItem('github_token', token);
-        showAlert('✅ GitHub token saved to session storage', 'success');
-    }
-
-    function getToken() {
-        return sessionStorage.getItem('github_token') || '';
-    }
-
     async function handleFormSubmit(e) {
         e.preventDefault();
-        
-        const token = getToken();
-        if (!token) {
-            showAlert('❌ GitHub token not configured. Please save your token first.', 'error');
-            return;
-        }
 
         const submitBtn = document.getElementById('submit-btn');
         submitBtn.disabled = true;
@@ -443,10 +410,10 @@
             const issueTitle = `📋 Timesheet: ${engineerName} - Week of ${weekDate}`;
             const issueBody = buildIssueBody(engineerName, weekDate, timeData);
 
-            // Create GitHub issue
-            await createGitHubIssue(token, issueTitle, issueBody);
+            // Create GitHub issue with submission token
+            await createGitHubIssue(SUBMISSION_TOKEN, issueTitle, issueBody);
 
-            showAlert('✅ Timesheet submitted successfully! Issue created in GitHub.', 'success');
+            showAlert('✅ Timesheet submitted successfully! Your submission has been recorded.', 'success');
             document.getElementById('timesheet-form').reset();
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Submit Timesheet';
@@ -461,7 +428,8 @@
     function buildIssueBody(engineerName, weekDate, timeData) {
         let body = `## Timesheet Submission\n\n`;
         body += `**Engineer:** ${engineerName}\n`;
-        body += `**Week Commencing:** ${weekDate}\n\n`;
+        body += `**Week Commencing:** ${weekDate}\n`;
+        body += `**Submitted:** ${new Date().toLocaleString()}\n\n`;
         body += `### Daily Breakdown\n\n`;
         
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -477,7 +445,6 @@
 
         body += `---\n`;
         body += `**Status:** Awaiting Admin Review\n`;
-        body += `**Labels:** pending-review, ${engineerName.toLowerCase().replace(/ /g, '-')}\n`;
 
         return body;
     }
