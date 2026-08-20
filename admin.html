@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trades Timesheet Admin Dashboard</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --warning: #ca8a04;
+            --danger: #dc2626;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: var(--gray-800);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #2563eb;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #16a34a;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #dc2626;
+        }
+
+        .alert-warning {
+            background: #fef9c3;
+            color: #854d0e;
+            border-left: 4px solid #ca8a04;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: var(--gray-700);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button.btn-secondary {
+            padding: 10px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        button.btn-secondary:hover {
+            background: var(--primary-hover);
+        }
+
+        button.btn-secondary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .token-section {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #ca8a04;
+            margin-bottom: 20px;
+        }
+
+        .token-section p {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .token-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .token-input-group input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--gray-200);
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .token-input-group button {
+            padding: 10px 16px;
+            background: var(--warning);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .token-input-group button:hover {
+            opacity: 0.9;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        th {
+            background-color: var(--gray-100);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        .badge-pending { background: #fee2e2; color: var(--danger); }
+        .badge-admin { background: #dbeafe; color: var(--primary); }
+        .badge-manager { background: #dcfce7; color: var(--success); }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            white-space: nowrap;
+        }
+
+        .btn-tick { 
+            background: var(--primary); 
+            color: white; 
+        }
+
+        .btn-tick:hover:not(:disabled) { 
+            background: var(--primary-hover); 
+        }
+
+        .btn-approve { 
+            background: var(--success); 
+            color: white; 
+        }
+
+        .btn-approve:hover:not(:disabled) { 
+            background: #15803d; 
+        }
+
+        .btn-approve:disabled,
+        .btn-tick:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--gray-100);
+            border-radius: 6px;
+        }
+
+        .filter-section label {
+            font-weight: 600;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .filter-section select {
+            padding: 8px 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .daily-hours {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .status-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>💼 Admin Dashboard & Verification Grid</h1>
+        <p class="subtitle">Track, verify, and approve engineer timesheets</p>
+    </header>
+
+    <div id="alert-container"></div>
+
+    <div class="card">
+        <div class="token-section" id="token-setup">
+            <p><strong>⚠️ GitHub Token Required</strong></p>
+            <p>This dashboard reads timesheet submissions from GitHub Issues. You need a Fine-Grained Personal Access Token with "Issues: Read & Write" permissions.</p>
+            <div class="token-input-group">
+                <input type="password" id="github-token" placeholder="Paste your GitHub PAT here (or it will load from env)" />
+                <button type="button" onclick="saveToken()">💾 Save Token</button>
+            </div>
+            <p style="font-size: 12px; margin-top: 8px; color: #7c2d12;">Token is stored in browser's sessionStorage only (cleared when browser closes) for security.</p>
+        </div>
+
+        <h2>Master Control Dashboard</h2>
+        <div class="controls">
+            <button class="btn-secondary" onclick="refreshDashboard()">🔄 Refresh Data</button>
+            <button class="btn-secondary" onclick="exportCSV()">📥 Export to CSV</button>
+            <button class="btn-secondary" onclick="clearAllData()" style="background: var(--danger);">⚠️ Clear All</button>
+        </div>
+
+        <div class="filter-section">
+            <label for="filter-status">Filter by Status:</label>
+            <select id="filter-status" onchange="applyFilter()">
+                <option value="">All Submissions</option>
+                <option value="pending">Pending Review</option>
+                <option value="admin">Admin Verified</option>
+                <option value="manager">Manager Approved</option>
+            </select>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Issue #</th>
+                        <th>Engineer</th>
+                        <th>Week of</th>
+                        <th>Daily Breakdown</th>
+                        <th>Admin Verification (You)</th>
+                        <th>Manager Approval (BACS)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="dashboard-rows">
+                    <tr><td colspan="7" class="no-data">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const GITHUB_OWNER = 'projectmastracc';
+    const GITHUB_REPO = 'tstimesheets';
+    const GITHUB_API = 'https://api.github.com';
+    let allIssues = [];
+    let filteredIssues = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedToken = sessionStorage.getItem('github_token');
+        if (savedToken) {
+            document.getElementById('github-token').value = savedToken;
+            showAlert('✅ GitHub token loaded from session storage', 'success');
+            refreshDashboard();
+        }
+    });
+
+    function showAlert(message, type = 'info') {
+        const container = document.getElementById('alert-container');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} show`;
+        alert.textContent = message;
+        container.appendChild(alert);
+        
+        setTimeout(() => {
+            alert.remove();
+        }, 5000);
+    }
+
+    function saveToken() {
+        const token = document.getElementById('github-token').value.trim();
+        if (!token) {
+            showAlert('❌ Please enter a GitHub token', 'error');
+            return;
+        }
+        sessionStorage.setItem('github_token', token);
+        showAlert('✅ GitHub token saved to session storage', 'success');
+        refreshDashboard();
+    }
+
+    function getToken() {
+        return sessionStorage.getItem('github_token') || '';
+    }
+
+    async function refreshDashboard() {
+        const token = getToken();
+        if (!token) {
+            showAlert('❌ GitHub token not configured. Please save your token first.', 'error');
+            return;
+        }
+
+        const tbody = document.getElementById('dashboard-rows');
+        tbody.innerHTML = '<tr><td colspan="7" class="no-data"><span class="loading-spinner"></span>Fetching timesheets...</td></tr>';
+
+        try {
+            allIssues = await fetchTimesheetIssues(token);
+            applyFilter();
+            if (allIssues.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No timesheet submissions yet.</td></tr>';
+            }
+        } catch (error) {
+            showAlert(`❌ Error: ${error.message}`, 'error');
+            tbody.innerHTML = '<tr><td colspan="7" class="no-data">Error loading data.</td></tr>';
+        }
+    }
+
+    async function fetchTimesheetIssues(token) {
+        const url = `${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/issues?labels=timesheet&state=all&per_page=100`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`GitHub API error: ${errorData.message || response.statusText}`);
+        }
+
+        const issues = await response.json();
+        return issues.map(issue => parseTimesheetIssue(issue));
+    }
+
+    function parseTimesheetIssue(issue) {
+        const body = issue.body || '';
+        const lines = body.split('\n');
+        
+        let engineer = 'Unknown';
+        let weekDate = 'Unknown';
+        const dailyData = {};
+
+        // Extract engineer name and week date
+        lines.forEach(line => {
+            if (line.includes('**Engineer:**')) {
+                engineer = line.replace('**Engineer:**', '').trim();
+            }
+            if (line.includes('**Week Commencing:**')) {
+                weekDate = line.replace('**Week Commencing:**', '').trim();
+            }
+        });
+
+        // Parse daily breakdown
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        days.forEach(day => {
+            const dayKey = day.toLowerCase().substring(0, 3);
+            dailyData[dayKey] = { hours: '-', job: '-', desc: '-' };
+            
+            let inDaySection = false;
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes(`**${day}**`)) {
+                    inDaySection = true;
+                } else if (inDaySection && lines[i].includes(`**`)) {
+                    break;
+                } else if (inDaySection) {
+                    if (lines[i].includes('- Hours:')) {
+                        dailyData[dayKey].hours = lines[i].replace('- Hours:', '').trim();
+                    }
+                    if (lines[i].includes('- Job:')) {
+                        dailyData[dayKey].job = lines[i].replace('- Job:', '').trim();
+                    }
+                    if (lines[i].includes('- Description:')) {
+                        dailyData[dayKey].desc = lines[i].replace('- Description:', '').trim();
+                    }
+                }
+            }
+        });
+
+        return {
+            number: issue.number,
+            id: issue.id,
+            title: issue.title,
+            engineer: engineer,
+            weekDate: weekDate,
+            dailyData: dailyData,
+            labels: issue.labels.map(l => l.name),
+            html_url: issue.html_url,
+            isAdminVerified: issue.labels.some(l => l.name === 'admin-verified'),
+            isManagerApproved: issue.labels.some(l => l.name === 'manager-approved')
+        };
+    }
+
+    function applyFilter() {
+        const filterValue = document.getElementById('filter-status').value;
+        
+        if (filterValue === 'pending') {
+            filteredIssues = allIssues.filter(i => !i.isAdminVerified);
+        } else if (filterValue === 'admin') {
+            filteredIssues = allIssues.filter(i => i.isAdminVerified && !i.isManagerApproved);
+        } else if (filterValue === 'manager') {
+            filteredIssues = allIssues.filter(i => i.isManagerApproved);
+        } else {
+            filteredIssues = allIssues;
+        }
+
+        renderDashboard();
+    }
+
+    function renderDashboard() {
+        const tbody = document.getElementById('dashboard-rows');
+        tbody.innerHTML = '';
+
+        if (filteredIssues.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="no-data">No submissions match the current filter.</td></tr>';
+            return;
+        }
+
+        filteredIssues.forEach(issue => {
+            const tr = document.createElement('tr');
+            const dailyBreakdown = buildDailyBreakdown(issue.dailyData);
+            const adminStatus = getAdminStatusBadge(issue.isAdminVerified);
+            const managerStatus = getManagerStatusBadge(issue.isManagerApproved);
+
+            tr.innerHTML = `
+                <td><a href="${issue.html_url}" target="_blank">#${issue.number}</a></td>
+                <td><strong>${issue.engineer}</strong></td>
+                <td>${issue.weekDate}</td>
+                <td><div class="daily-hours">${dailyBreakdown}</div></td>
+                <td>${adminStatus}</td>
+                <td>${managerStatus}</td>
+                <td>
+                    <button class="action-btn btn-tick" onclick="markAdminVerified(${issue.id}, ${issue.number})" ${issue.isAdminVerified ? 'disabled' : ''}>✔️ Verify</button>
+                    <button class="action-btn btn-approve" onclick="markManagerApproved(${issue.id}, ${issue.number})" ${!issue.isAdminVerified || issue.isManagerApproved ? 'disabled' : ''}>💰 Approve</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function buildDailyBreakdown(dailyData) {
+        let html = '';
+        const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        
+        days.forEach((key, index) => {
+            const data = dailyData[key];
+            html += `<strong>${dayNames[index]}:</strong> ${data.hours}h (${data.job})<br/>`;
+        });
+        
+        return html;
+    }
+
+    function getAdminStatusBadge(isVerified) {
+        if (isVerified) {
+            return '<div class="status-row"><span class="badge badge-admin">✓ Admin Verified</span></div>';
+        }
+        return '<div class="status-row"><span class="badge badge-pending">⧖ Awaiting Review</span></div>';
+    }
+
+    function getManagerStatusBadge(isApproved) {
+        if (isApproved) {
+            return '<div class="status-row"><span class="badge badge-manager">✓ BACS Approved</span></div>';
+        }
+        return '<div class="status-row"><span class="badge badge-pending">⧖ Pending</span></div>';
+    }
+
+    async function markAdminVerified(issueId, issueNumber) {
+        const token = getToken();
+        if (!token) {
+            showAlert('❌ Token not configured', 'error');
+            return;
+        }
+
+        try {
+            await addLabelToIssue(token, issueNumber, 'admin-verified');
+            showAlert('✅ Issue marked as admin-verified', 'success');
+            refreshDashboard();
+        } catch (error) {
+            showAlert(`❌ Error: ${error.message}`, 'error');
+        }
+    }
+
+    async function markManagerApproved(issueId, issueNumber) {
+        const token = getToken();
+        if (!token) {
+            showAlert('❌ Token not configured', 'error');
+            return;
+        }
+
+        try {
+            await addLabelToIssue(token, issueNumber, 'manager-approved');
+            showAlert('✅ Issue marked as manager-approved', 'success');
+            refreshDashboard();
+        } catch (error) {
+            showAlert(`❌ Error: ${error.message}`, 'error');
+        }
+    }
+
+    async function addLabelToIssue(token, issueNumber, newLabel) {
+        const url = `${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/issues/${issueNumber}/labels`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                labels: [newLabel]
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`GitHub API error: ${errorData.message || response.statusText}`);
+        }
+
+        return await response.json();
+    }
+
+    async function exportCSV() {
+        let csvContent = "Issue #,Engineer,Week Commencing,Mon Hours,Tue Hours,Wed Hours,Thu Hours,Fri Hours,Admin Status,Manager Status\n";
+        
+        filteredIssues.forEach(issue => {
+            const data = issue.dailyData;
+            const adminStatus = issue.isAdminVerified ? 'Verified' : 'Pending';
+            const managerStatus = issue.isManagerApproved ? 'Approved' : 'Pending';
+            
+            csvContent += `"#${issue.number}","${issue.engineer}","${issue.weekDate}","${data.mon.hours}","${data.tue.hours}","${data.wed.hours}","${data.thu.hours}","${data.fri.hours}","${adminStatus}","${managerStatus}"\n`;
+        });
+
+        const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `timesheets_export_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showAlert('✅ CSV exported successfully', 'success');
+    }
+
+    async function clearAllData() {
+        if (!confirm('⚠️ Are you sure you want to close ALL open timesheet issues? This cannot be undone.')) {
+            return;
+        }
+
+        const token = getToken();
+        if (!token) {
+            showAlert('❌ Token not configured', 'error');
+            return;
+        }
+
+        const tbody = document.getElementById('dashboard-rows');
+        tbody.innerHTML = '<tr><td colspan="7" class="no-data"><span class="loading-spinner"></span>Processing...</td></tr>';
+
+        try {
+            let closedCount = 0;
+            for (const issue of allIssues) {
+                await closeIssue(token, issue.number);
+                closedCount++;
+            }
+            
+            showAlert(`✅ Closed ${closedCount} issue(s)`, 'success');
+            refreshDashboard();
+        } catch (error) {
+            showAlert(`❌ Error: ${error.message}`, 'error');
+            refreshDashboard();
+        }
+    }
+
+    async function closeIssue(token, issueNumber) {
+        const url = `${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/issues/${issueNumber}`;
+        
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                state: 'closed'
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`GitHub API error: ${errorData.message || response.statusText}`);
+        }
+
+        return await response.json();
+    }
+</script>
+
+</body>
+</html>
